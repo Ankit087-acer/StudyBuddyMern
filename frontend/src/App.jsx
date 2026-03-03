@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import StudyTools from './pages/StudyTools';
+import Features from './pages/Features';
 import Settings from './pages/Settings';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
@@ -37,6 +39,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/study-tools" element={<StudyTools />} />
+                <Route path="/features" element={<Features />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>

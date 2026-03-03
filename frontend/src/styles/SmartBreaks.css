@@ -1,0 +1,43 @@
+/* Break Buttons */
+.break-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.break-btn {
+    padding: 15px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid var(--primary);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-height: 80px;
+    background: transparent;
+    color: var(--primary);
+}
+
+.break-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);
+}
+
+.break-info {
+    text-align: center;
+    padding: 15px;
+    background: var(--light);
+    border-radius: 12px;
+    color: var(--secondary);
+}
+
+.break-info strong {
+    color: var(--primary);
+}

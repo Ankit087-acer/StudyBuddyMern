@@ -1,0 +1,47 @@
+/* Analytics Styles */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.analytics-card {
+    background: var(--light);
+    padding: 25px 20px;
+    border-radius: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.analytics-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary-light);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.analytics-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 5px;
+}
+
+.analytics-label {
+    color: var(--secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
