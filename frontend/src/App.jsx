@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
+import Login from './pages/Login';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import { ThemeProvider } from './hooks/useTheme';
@@ -8,21 +9,34 @@ import { LoadingProvider } from './hooks/useLoading';
 import { NotificationProvider } from './hooks/useNotifications';
 import './styles/App.css';
 
+// Layout component to conditionally render Header and Footer
+function Layout({ children }) {
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+  
+  return (
+    <div className="app">
+      {!isLoginPage && <Header />}
+      <main className={`main-content ${isLoginPage ? 'login-page-content' : ''}`}>
+        {children}
+      </main>
+      {!isLoginPage && <Footer />}
+    </div>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
       <LoadingProvider>
         <NotificationProvider>
           <Router>
-            <div className="app">
-              <Header />
-              <main className="main-content">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+              </Routes>
+            </Layout>
           </Router>
         </NotificationProvider>
       </LoadingProvider>

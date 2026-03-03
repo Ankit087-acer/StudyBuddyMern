@@ -355,3 +355,26 @@ section {
         word-wrap: break-word;
     }
 }
+/* Add to your App.css */
+.main-content.login-page-content {
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Ensure app doesn't interfere with login page */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+}
+
+/* Override any global styles that might affect login page */
+body:has(.login-page) {
+  overflow: hidden;
+}
