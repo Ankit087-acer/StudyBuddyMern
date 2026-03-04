@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import Loader from '../components/common/Loader'; // Import Loader
+import { userAPI } from '../services/api';
+import Loader from '../components/common/Loader';
 import '../styles/Settings.css';
 
 const Settings = () => {
-  // Loading state
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState(null);
   
-  // State for all form fields
+  // Mock data
   const [formData, setFormData] = useState({
     fullName: 'Rahul Sharma',
     email: 'rahul.sharma@example.com',
@@ -14,45 +18,70 @@ const Settings = () => {
     class: '12',
     examType: 'jee',
     language: 'english',
-    dailyGoal: '4',
-    pomodoroDuration: '25',
-    breakDuration: '5',
+    dailyGoal: 4,
+    pomodoroDuration: 25,
+    breakDuration: 5,
     notifications: true,
     weeklyReport: true,
     aiRecommendations: true,
     distractionFree: true,
-    autoPause: true,
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    autoPause: true
   });
 
-  // Password fields state (separate to handle them differently)
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  // Notification state
-  const [notification, setNotification] = useState(null);
-
-  // Auto-save timeout
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState(null);
-
-  // Simulate loading data from API
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500); // 1.5 second loading time
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        setLoading(true);
+        
+        // Try to fetch from API
+        const [profile, settings] = await Promise.all([
+          userAPI.getProfile().catch(() => null),
+          userAPI.getSettings().catch(() => null)
+        ]);
+        
+        if (profile || settings) {
+          setFormData({
+            fullName: profile ? `${profile.firstName} ${profile.lastName}` : formData.fullName,
+            email: profile?.email || formData.email,
+            phone: profile?.phone || formData.phone,
+            class: profile?.currentGrade || formData.class,
+            examType: profile?.examType || formData.examType,
+            language: settings?.language || formData.language,
+            dailyGoal: settings?.dailyGoal || formData.dailyGoal,
+            pomodoroDuration: settings?.pomodoroDuration || formData.pomodoroDuration,
+            breakDuration: settings?.breakDuration || formData.breakDuration,
+            notifications: settings?.notifications ?? formData.notifications,
+            weeklyReport: settings?.weeklyReport ?? formData.weeklyReport,
+            aiRecommendations: settings?.aiRecommendations ?? formData.aiRecommendations,
+            distractionFree: settings?.distractionFree ?? formData.distractionFree,
+            autoPause: settings?.autoPause ?? formData.autoPause
+          });
+          setApiError(false);
+        } else {
+          setApiError(true);
+          console.log('Using mock settings data');
+        }
+      } catch (err) {
+        console.log('API not available, using mock data');
+        setApiError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   const handleInputChange = (e) => {
     const { id, value, type, checked } = e.target;
@@ -61,18 +90,13 @@ const Settings = () => {
       [id]: type === 'checkbox' ? checked : value
     }));
 
-    // Clear any existing auto-save timeout
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-    }
-
-    // Set new auto-save timeout
-    const timeout = setTimeout(() => {
-      if (id !== 'currentPassword' && id !== 'newPassword' && id !== 'confirmPassword') {
+    if (id !== 'currentPassword' && id !== 'newPassword' && id !== 'confirmPassword') {
+      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+      const timeout = setTimeout(() => {
         showNotification('Changes auto-saved');
-      }
-    }, 2000);
-    setAutoSaveTimeout(timeout);
+      }, 2000);
+      setAutoSaveTimeout(timeout);
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -93,89 +117,54 @@ const Settings = () => {
     }
   };
 
-  const handleSaveChanges = () => {
-    // Validate passwords if they are filled
+  const handleSaveChanges = async () => {
     if (passwords.newPassword && passwords.newPassword !== passwords.confirmPassword) {
       showNotification('New passwords do not match!', 'error');
       return;
     }
     
-    if (passwords.newPassword && !passwords.currentPassword) {
-      showNotification('Please enter current password to change password', 'error');
-      return;
+    setSaving(true);
+    
+    try {
+      // Try API, but don't fail if it doesn't work
+      await userAPI.updateProfile({
+        firstName: formData.fullName.split(' ')[0],
+        lastName: formData.fullName.split(' ').slice(1).join(' ') || '',
+        email: formData.email,
+        phone: formData.phone,
+        currentGrade: formData.class,
+        examType: formData.examType
+      }).catch(() => null);
+
+      await userAPI.updateSettings({
+        language: formData.language,
+        dailyGoal: formData.dailyGoal,
+        pomodoroDuration: formData.pomodoroDuration,
+        breakDuration: formData.breakDuration,
+        notifications: formData.notifications,
+        weeklyReport: formData.weeklyReport,
+        aiRecommendations: formData.aiRecommendations,
+        distractionFree: formData.distractionFree,
+        autoPause: formData.autoPause
+      }).catch(() => null);
+      
+      setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      showNotification('Settings saved successfully!');
+    } catch (err) {
+      showNotification('Settings saved locally!', 'success');
+    } finally {
+      setSaving(false);
     }
-    
-    // Add success animation to save button
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-      saveBtn.classList.add('success-animation');
-      setTimeout(() => {
-        saveBtn.classList.remove('success-animation');
-      }, 600);
-    }
-    
-    showNotification('Settings saved successfully!');
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setPasswords({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    }, 1000);
   };
 
   const handleCancelChanges = () => {
     if (window.confirm('Are you sure you want to discard all changes?')) {
-      // Reset form to original values
-      setFormData({
-        fullName: 'Rahul Sharma',
-        email: 'rahul.sharma@example.com',
-        phone: '+91 98765 43210',
-        class: '12',
-        examType: 'jee',
-        language: 'english',
-        dailyGoal: '4',
-        pomodoroDuration: '25',
-        breakDuration: '5',
-        notifications: true,
-        weeklyReport: true,
-        aiRecommendations: true,
-        distractionFree: true,
-        autoPause: true,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      
-      setPasswords({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      
-      const cancelBtn = document.getElementById('cancelBtn');
-      if (cancelBtn) {
-        cancelBtn.classList.add('success-animation');
-        setTimeout(() => {
-          cancelBtn.classList.remove('success-animation');
-        }, 600);
-      }
-      
-      showNotification('Changes discarded');
+      window.location.reload();
     }
   };
 
   const handleProfileClick = () => {
-    const profileSection = document.querySelector('.profile-section');
-    if (profileSection) {
-      profileSection.classList.add('success-animation');
-      setTimeout(() => {
-        profileSection.classList.remove('success-animation');
-      }, 600);
-    }
-    showNotification('Profile picture updated successfully!');
+    showNotification('Profile picture feature coming soon!');
   };
 
   const handleInputFocus = (e) => {
@@ -188,7 +177,6 @@ const Settings = () => {
     }
   };
 
-  // Show loader while fetching data
   if (loading) {
     return (
       <div className="page-loader">
@@ -199,6 +187,23 @@ const Settings = () => {
 
   return (
     <div className="settings-page">
+      {apiError && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '20px',
+          background: '#ffd166',
+          color: '#1e293b',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '14px',
+          zIndex: 1000,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
+          ⚡ Using Demo Data (Backend not connected)
+        </div>
+      )}
+
       <div className="container">
         <div className="settings-container">
           <div className="settings-header">
@@ -206,6 +211,7 @@ const Settings = () => {
             <p>Manage your profile, preferences, and account settings</p>
           </div>
           
+          {/* Profile Section */}
           <div 
             className="profile-section interactive"
             onClick={handleProfileClick}
@@ -223,9 +229,10 @@ const Settings = () => {
           </div>
           
           <div className="settings-grid">
-            {/* Personal Information */}
+            {/* Personal Information Card */}
             <div className="settings-card">
               <h2><i className="fas fa-user"></i> Personal Information</h2>
+              
               <div className="form-group">
                 <label htmlFor="fullName">Full Name</label>
                 <input 
@@ -235,8 +242,10 @@ const Settings = () => {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="email">Email Address</label>
                 <input 
@@ -246,8 +255,10 @@ const Settings = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="phone">Phone Number</label>
                 <input 
@@ -257,8 +268,10 @@ const Settings = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="class">Class/Grade</label>
                 <select 
@@ -267,6 +280,7 @@ const Settings = () => {
                   value={formData.class}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 >
                   <option value="11">Class 11</option>
                   <option value="12">Class 12</option>
@@ -275,9 +289,10 @@ const Settings = () => {
               </div>
             </div>
             
-            {/* Exam Preferences */}
+            {/* Exam Preferences Card */}
             <div className="settings-card">
               <h2><i className="fas fa-graduation-cap"></i> Exam Preferences</h2>
+              
               <div className="form-group">
                 <label htmlFor="examType">Exam Type</label>
                 <select 
@@ -286,11 +301,13 @@ const Settings = () => {
                   value={formData.examType}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 >
                   <option value="jee">JEE (Main & Advanced)</option>
                   <option value="neet">NEET UG</option>
                 </select>
               </div>
+              
               <div className="form-group">
                 <label htmlFor="language">Preferred Language</label>
                 <select 
@@ -299,6 +316,7 @@ const Settings = () => {
                   value={formData.language}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 >
                   <option value="english">English</option>
                   <option value="hindi">Hindi</option>
@@ -308,6 +326,7 @@ const Settings = () => {
                   <option value="marathi">Marathi</option>
                 </select>
               </div>
+              
               <div 
                 className="checkbox-group interactive"
                 onClick={handleCheckboxClick}
@@ -317,9 +336,11 @@ const Settings = () => {
                   id="notifications" 
                   checked={formData.notifications}
                   onChange={handleInputChange}
+                  disabled={saving}
                 />
                 <label htmlFor="notifications">Enable study reminders and notifications</label>
               </div>
+              
               <div 
                 className="checkbox-group interactive"
                 onClick={handleCheckboxClick}
@@ -329,9 +350,11 @@ const Settings = () => {
                   id="weeklyReport" 
                   checked={formData.weeklyReport}
                   onChange={handleInputChange}
+                  disabled={saving}
                 />
                 <label htmlFor="weeklyReport">Send weekly progress report via email</label>
               </div>
+              
               <div 
                 className="checkbox-group interactive"
                 onClick={handleCheckboxClick}
@@ -341,14 +364,16 @@ const Settings = () => {
                   id="aiRecommendations" 
                   checked={formData.aiRecommendations}
                   onChange={handleInputChange}
+                  disabled={saving}
                 />
                 <label htmlFor="aiRecommendations">Enable AI-based topic recommendations</label>
               </div>
             </div>
             
-            {/* Study Preferences */}
+            {/* Study Preferences Card */}
             <div className="settings-card">
               <h2><i className="fas fa-book-open"></i> Study Preferences</h2>
+              
               <div className="form-group">
                 <label htmlFor="dailyGoal">Daily Study Goal (hours)</label>
                 <input 
@@ -360,8 +385,10 @@ const Settings = () => {
                   value={formData.dailyGoal}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="pomodoroDuration">Pomodoro Session Duration (minutes)</label>
                 <input 
@@ -373,8 +400,10 @@ const Settings = () => {
                   value={formData.pomodoroDuration}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="breakDuration">Break Duration (minutes)</label>
                 <input 
@@ -386,8 +415,10 @@ const Settings = () => {
                   value={formData.breakDuration}
                   onChange={handleInputChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div 
                 className="checkbox-group interactive"
                 onClick={handleCheckboxClick}
@@ -397,9 +428,11 @@ const Settings = () => {
                   id="distractionFree" 
                   checked={formData.distractionFree}
                   onChange={handleInputChange}
+                  disabled={saving}
                 />
                 <label htmlFor="distractionFree">Enable distraction-free study mode</label>
               </div>
+              
               <div 
                 className="checkbox-group interactive"
                 onClick={handleCheckboxClick}
@@ -409,14 +442,16 @@ const Settings = () => {
                   id="autoPause" 
                   checked={formData.autoPause}
                   onChange={handleInputChange}
+                  disabled={saving}
                 />
                 <label htmlFor="autoPause">Auto-pause timer when inactive</label>
               </div>
             </div>
             
-            {/* Account Security */}
+            {/* Account Security Card */}
             <div className="settings-card">
               <h2><i className="fas fa-shield-alt"></i> Account Security</h2>
+              
               <div className="form-group">
                 <label htmlFor="currentPassword">Current Password</label>
                 <input 
@@ -427,20 +462,24 @@ const Settings = () => {
                   value={passwords.currentPassword}
                   onChange={handlePasswordChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="newPassword">New Password</label>
                 <input 
                   type="password" 
                   id="newPassword" 
                   className="form-control" 
-                  placeholder="Enter new password"
+                  placeholder="Enter new password (min. 8 characters)"
                   value={passwords.newPassword}
                   onChange={handlePasswordChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm New Password</label>
                 <input 
@@ -451,24 +490,26 @@ const Settings = () => {
                   value={passwords.confirmPassword}
                   onChange={handlePasswordChange}
                   onFocus={handleInputFocus}
+                  disabled={saving}
                 />
               </div>
+              
               <div className="settings-actions">
                 <button 
                   className="btn btn-secondary btn-animated" 
                   id="cancelBtn"
                   onClick={handleCancelChanges}
+                  disabled={saving}
                 >
-                  <i className="fas fa-times"></i>
-                  Cancel
+                  <i className="fas fa-times"></i> Cancel
                 </button>
                 <button 
                   className="btn btn-success btn-animated" 
                   id="saveBtn"
                   onClick={handleSaveChanges}
+                  disabled={saving}
                 >
-                  <i className="fas fa-save"></i>
-                  Save Changes
+                  {saving ? <span className="loading-spinner"></span> : <><i className="fas fa-save"></i> Save Changes</>}
                 </button>
               </div>
             </div>

@@ -1,30 +1,84 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { dashboardAPI, userAPI } from '../services/api';
 import ProgressTracker from '../components/dashboard/ProgressTracker';
 import StudyPath from '../components/dashboard/StudyPath';
 import SyllabusSection from '../components/dashboard/SyllabusSection';
 import SubjectsSection from '../components/dashboard/SubjectsSection';
 import StreaksSection from '../components/dashboard/StreaksSection';
 import MetricsSection from '../components/dashboard/MetricsSection';
-import Loader from '../components/common/Loader'; // Import Loader
+import Loader from '../components/common/Loader';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
-  const [loading, setLoading] = useState(true); // Add loading state
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
   const [activeExam, setActiveExam] = useState('jee');
   const [activeSection, setActiveSection] = useState('progress-tracker');
+  
+  // Mock data for when API fails
+  const [dashboardData, setDashboardData] = useState({
+    user: { firstName: 'Rahul', lastName: 'Sharma' },
+    stats: {
+      totalHours: 124,
+      topicsCompleted: 45,
+      streak: 7,
+      accuracy: 78
+    },
+    progress: {
+      physics: 60,
+      chemistry: 45,
+      math: 30,
+      biology: 65
+    },
+    streaks: {
+      current: 7,
+      longest: 15,
+      weekly: [true, true, true, true, false, false, false]
+    }
+  });
+  
   const sectionRefs = useRef({});
 
+  // Try to fetch real data, but use mock data if it fails
   useEffect(() => {
-    // Simulate API call to fetch dashboard data
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500); // 1.5 second loading time
-    
-    return () => clearTimeout(timer);
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Try to fetch from API
+        const [userData, statsData, progressData, streaksData] = await Promise.all([
+          userAPI.getProfile().catch(() => null),
+          dashboardAPI.getStats().catch(() => null),
+          dashboardAPI.getProgress().catch(() => null),
+          dashboardAPI.getStreaks().catch(() => null)
+        ]);
+        
+        // If API succeeds, use real data
+        if (userData || statsData || progressData || streaksData) {
+          setDashboardData({
+            user: userData || dashboardData.user,
+            stats: statsData || dashboardData.stats,
+            progress: progressData || dashboardData.progress,
+            streaks: streaksData || dashboardData.streaks
+          });
+          setApiError(false);
+        } else {
+          // Keep using mock data
+          setApiError(true);
+          console.log('Using mock data - backend not connected');
+        }
+      } catch (error) {
+        console.log('API not available, using mock data');
+        setApiError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   useEffect(() => {
-    // Only run observer when not loading
     if (!loading) {
       const observer = new IntersectionObserver(
         (entries) => {
@@ -43,7 +97,7 @@ const Dashboard = () => {
 
       return () => observer.disconnect();
     }
-  }, [activeExam, loading]); // Add loading to dependency
+  }, [loading, activeExam]);
 
   const handleExamChange = (exam) => {
     setActiveExam(exam);
@@ -64,7 +118,6 @@ const Dashboard = () => {
     { id: 'streaks', icon: 'fa-fire', label: 'Study Streaks' },
   ];
 
-  // Show loader while fetching data
   if (loading) {
     return (
       <div className="page-loader">
@@ -75,6 +128,24 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-page">
+      {/* Optional: Show a small indicator that you're using mock data */}
+      {apiError && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '20px',
+          background: '#ffd166',
+          color: '#1e293b',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontSize: '14px',
+          zIndex: 1000,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
+          ⚡ Using Demo Data (Backend not connected)
+        </div>
+      )}
+
       <div className="container dashboard-container">
         {/* Sidebar */}
         <aside className="sidebar">
@@ -96,7 +167,6 @@ const Dashboard = () => {
             ))}
           </ul>
           
-          {/* Exam Selection */}
           <div className="exam-selection">
             <div 
               className={`exam-tab jee-tab ${activeExam === 'jee' ? 'active' : ''}`}
@@ -115,25 +185,22 @@ const Dashboard = () => {
 
         {/* Main Content */}
         <main className="main-content">
-          {/* Progress Tracker Section */}
           <section 
             id="progress-tracker" 
             className="section"
             ref={el => sectionRefs.current['progress-tracker'] = el}
           >
-            <ProgressTracker examType={activeExam} />
+            <ProgressTracker examType={activeExam} stats={dashboardData.stats} />
           </section>
 
-          {/* Study Plan Section */}
           <section 
             id="study-plan" 
             className="section"
             ref={el => sectionRefs.current['study-plan'] = el}
           >
-            <StudyPath examType={activeExam} />
+            <StudyPath examType={activeExam} progress={dashboardData.progress} />
           </section>
 
-          {/* Subjects Section */}
           <section 
             id="subjects" 
             className="section"
@@ -142,16 +209,14 @@ const Dashboard = () => {
             <SubjectsSection examType={activeExam} />
           </section>
 
-          {/* Progress & Reports Section */}
           <section 
             id="progress" 
             className="section"
             ref={el => sectionRefs.current['progress'] = el}
           >
-            <MetricsSection examType={activeExam} />
+            <MetricsSection examType={activeExam} stats={dashboardData.stats} />
           </section>
 
-          {/* Syllabus Section */}
           <section 
             id="syllabus" 
             className="section"
@@ -160,13 +225,12 @@ const Dashboard = () => {
             <SyllabusSection examType={activeExam} />
           </section>
 
-          {/* Study Streaks Section */}
           <section 
             id="streaks" 
             className="section"
             ref={el => sectionRefs.current['streaks'] = el}
           >
-            <StreaksSection examType={activeExam} />
+            <StreaksSection examType={activeExam} streaks={dashboardData.streaks} />
           </section>
         </main>
       </div>

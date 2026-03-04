@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from '../assets/StudyBuddyLogo.jpg'; // Import your logo
+import { authAPI } from '../services/api'; // ✅ Added API import
+import logo from '../assets/StudyBuddyLogo.jpg';
 import '../styles/Login.css';
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true); // true = login, false = signup
+  const [isLogin, setIsLogin] = useState(true);
   const [notification, setNotification] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   // Login form state
@@ -45,19 +47,53 @@ const Login = () => {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    showNotification('Logging in...');
-    // Add your login API call here
-    setTimeout(() => navigate('/dashboard'), 1500);
+    setIsLoading(true);
+    
+    try {
+      const response = await authAPI.login(loginData.email, loginData.password); // ✅ Real API call
+      
+      // Save token and user data
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      showNotification('Login successful! Redirecting...');
+      setTimeout(() => navigate('/dashboard'), 1500);
+    } catch (error) {
+      showNotification(error.message || 'Login failed', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
+    
     if (!signupData.status || !signupData.examType) {
       showNotification('Please select all options', 'error');
       return;
     }
-    showNotification('Account created! Please login');
-    setTimeout(() => setIsLogin(true), 1500);
+    
+    setIsLoading(true);
+
+    try {
+      const userData = {
+        first_name: signupData.firstName,
+        last_name: signupData.lastName,
+        email: signupData.email,
+        password: signupData.password,
+        current_grade: signupData.status,
+        exam_type: signupData.examType
+      };
+      
+      await authAPI.register(userData); // ✅ Real API call
+      
+      showNotification('Account created! Please login');
+      setTimeout(() => setIsLogin(true), 1500);
+    } catch (error) {
+      showNotification(error.message || 'Registration failed', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -80,6 +116,7 @@ const Login = () => {
                   value={loginData.email}
                   onChange={handleLoginChange}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -92,16 +129,17 @@ const Login = () => {
                   value={loginData.password}
                   onChange={handleLoginChange}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
-              <button type="submit" className="login-submit-btn">
-                Sign In
+              <button type="submit" className="login-submit-btn" disabled={isLoading}>
+                {isLoading ? <span className="loading-spinner"></span> : 'Sign In'}
               </button>
 
               <p className="switch-text">
                 Don't have an account?{' '}
-                <span onClick={() => setIsLogin(false)}>Create one</span>
+                <span onClick={() => !isLoading && setIsLogin(false)}>Create one</span>
               </p>
             </form>
           ) : (
@@ -120,6 +158,7 @@ const Login = () => {
                     value={signupData.firstName}
                     onChange={handleSignupChange}
                     required
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -132,6 +171,7 @@ const Login = () => {
                     value={signupData.lastName}
                     onChange={handleSignupChange}
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -145,6 +185,7 @@ const Login = () => {
                   value={signupData.email}
                   onChange={handleSignupChange}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -157,6 +198,7 @@ const Login = () => {
                   value={signupData.password}
                   onChange={handleSignupChange}
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -166,21 +208,24 @@ const Login = () => {
                   <button
                     type="button"
                     className={`option-btn ${signupData.status === 'Class 11' ? 'active' : ''}`}
-                    onClick={() => setSignupData({...signupData, status: 'Class 11'})}
+                    onClick={() => !isLoading && setSignupData({...signupData, status: 'Class 11'})}
+                    disabled={isLoading}
                   >
                     Class 11
                   </button>
                   <button
                     type="button"
                     className={`option-btn ${signupData.status === 'Class 12' ? 'active' : ''}`}
-                    onClick={() => setSignupData({...signupData, status: 'Class 12'})}
+                    onClick={() => !isLoading && setSignupData({...signupData, status: 'Class 12'})}
+                    disabled={isLoading}
                   >
                     Class 12
                   </button>
                   <button
                     type="button"
                     className={`option-btn ${signupData.status === 'Dropper' ? 'active' : ''}`}
-                    onClick={() => setSignupData({...signupData, status: 'Dropper'})}
+                    onClick={() => !isLoading && setSignupData({...signupData, status: 'Dropper'})}
+                    disabled={isLoading}
                   >
                     Dropper
                   </button>
@@ -193,27 +238,29 @@ const Login = () => {
                   <button
                     type="button"
                     className={`option-btn ${signupData.examType === 'JEE' ? 'active' : ''}`}
-                    onClick={() => setSignupData({...signupData, examType: 'JEE'})}
+                    onClick={() => !isLoading && setSignupData({...signupData, examType: 'JEE'})}
+                    disabled={isLoading}
                   >
                     JEE
                   </button>
                   <button
                     type="button"
                     className={`option-btn ${signupData.examType === 'NEET' ? 'active' : ''}`}
-                    onClick={() => setSignupData({...signupData, examType: 'NEET'})}
+                    onClick={() => !isLoading && setSignupData({...signupData, examType: 'NEET'})}
+                    disabled={isLoading}
                   >
                     NEET
                   </button>
                 </div>
               </div>
 
-              <button type="submit" className="login-submit-btn">
-                Sign Up
+              <button type="submit" className="login-submit-btn" disabled={isLoading}>
+                {isLoading ? <span className="loading-spinner"></span> : 'Sign Up'}
               </button>
 
               <p className="switch-text">
                 Already have an account?{' '}
-                <span onClick={() => setIsLogin(true)}>Sign in</span>
+                <span onClick={() => !isLoading && setIsLogin(true)}>Sign in</span>
               </p>
             </form>
           )}
