@@ -1,4 +1,4 @@
-/* Loading Screen */
+/* Loading Screen - NO SCROLLBAR VERSION */
 .loading-screen {
     position: fixed;
     top: 0;
@@ -7,23 +7,19 @@
     height: 100%;
     background: linear-gradient(135deg, #4a6cf7, #6a11cb);
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 9999;
-    color: white !important; /* Force white text */
+    color: white !important;
     text-align: center;
     transition: opacity 0.5s ease;
-    overflow: hidden;
+    overflow: hidden !important; /* Force hide scrollbar */
 }
 
 /* Force all text inside loading screen to be white */
 .loading-screen * {
     color: white !important;
-}
-
-.loading-screen i {
-    color: white !important;
+    box-sizing: border-box;
 }
 
 .loading-screen.hidden {
@@ -35,23 +31,26 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
+    justify-content: center;
+    gap: 15px; /* Reduced from 30px */
     max-width: 500px;
     width: 90%;
-    padding: 20px;
+    padding: 10px; /* Reduced from 20px */
+    margin: 0 auto;
+    height: 100%; /* Use full height */
 }
 
 .loading-logo {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 8px; /* Reduced from 15px */
     width: 100%;
 }
 
 .loading-logo img {
-    width: 100px;
-    height: 100px;
+    width: 80px; /* Reduced from 100px */
+    height: 80px; /* Reduced from 100px */
     border-radius: 50%;
     border: 3px solid white;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -59,22 +58,21 @@
 }
 
 .logo-text {
-    font-size: 32px;
+    font-size: 28px; /* Reduced from 32px */
     font-weight: bold;
     word-wrap: break-word;
-    color: white !important;
 }
 
 .loading-animation {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 10px; /* Reduced from 20px */
     width: 100%;
 }
 
 .loading-book {
-    font-size: 48px;
+    font-size: 40px; /* Reduced from 48px */
     animation: pulse 2s infinite;
 }
 
@@ -88,15 +86,14 @@
 }
 
 .loading-text {
-    font-size: 24px;
+    font-size: 20px; /* Reduced from 24px */
     font-weight: 600;
-    margin-bottom: 10px;
+    margin-bottom: 5px; /* Reduced from 10px */
     word-wrap: break-word;
-    color: white !important;
 }
 
 .loading-subtext {
-    font-size: 16px;
+    font-size: 14px; /* Reduced from 16px */
     opacity: 0.9;
     word-wrap: break-word;
     color: rgba(255, 255, 255, 0.9) !important;
@@ -104,44 +101,44 @@
 
 .progress-container {
     width: 100%;
-    max-width: 300px;
-    height: 8px;
+    max-width: 250px; /* Reduced from 300px */
+    height: 6px; /* Reduced from 8px */
     background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
-    margin: 20px auto;
+    margin: 5px auto; /* Reduced from 20px */
 }
 
 .progress-bar {
     height: 100%;
     background-color: white !important;
     width: 0%;
-    border-radius: 4px;
+    border-radius: 3px;
     transition: width 0.3s ease;
 }
 
 .loading-stats {
     display: flex;
-    gap: 40px;
-    margin-top: 20px;
+    gap: 20px; /* Reduced from 40px */
+    margin-top: 5px; /* Reduced from 20px */
     flex-wrap: wrap;
     justify-content: center;
 }
 
 .stat {
     text-align: center;
-    min-width: 60px;
+    min-width: 50px; /* Reduced from 60px */
 }
 
 .stat-number {
-    font-size: 24px;
+    font-size: 20px; /* Reduced from 24px */
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 2px; /* Reduced from 5px */
     color: white !important;
 }
 
 .stat-label {
-    font-size: 14px;
+    font-size: 12px; /* Reduced from 14px */
     opacity: 0.8;
     color: rgba(255, 255, 255, 0.8) !important;
 }
@@ -166,27 +163,68 @@
 /* Responsive */
 @media (max-width: 480px) {
     .loading-logo img {
-        width: 80px;
-        height: 80px;
+        width: 70px;
+        height: 70px;
     }
 
     .logo-text {
-        font-size: 28px;
+        font-size: 24px;
+    }
+
+    .loading-book {
+        font-size: 36px;
     }
 
     .loading-text {
-        font-size: 20px;
+        font-size: 18px;
+    }
+
+    .loading-subtext {
+        font-size: 13px;
     }
 
     .loading-stats {
-        gap: 20px;
+        gap: 15px;
     }
 
     .stat-number {
-        font-size: 20px;
+        font-size: 18px;
     }
 
     .progress-container {
-        max-width: 250px;
+        max-width: 220px;
+    }
+}
+
+/* Small height screens */
+@media (max-height: 600px) {
+    .loading-content {
+        gap: 8px;
+    }
+    
+    .loading-logo img {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .logo-text {
+        font-size: 22px;
+    }
+    
+    .loading-book {
+        font-size: 32px;
+    }
+    
+    .loading-text {
+        font-size: 16px;
+    }
+    
+    .progress-container {
+        max-width: 200px;
+        height: 4px;
+    }
+    
+    .loading-stats {
+        gap: 10px;
     }
 }

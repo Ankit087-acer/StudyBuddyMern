@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import Loader from '../components/common/Loader'; // Import Loader
 import '../styles/Settings.css';
 
 const Settings = () => {
+  // Loading state
+  const [loading, setLoading] = useState(true);
+  
   // State for all form fields
   const [formData, setFormData] = useState({
     fullName: 'Rahul Sharma',
@@ -35,6 +39,15 @@ const Settings = () => {
 
   // Auto-save timeout
   const [autoSaveTimeout, setAutoSaveTimeout] = useState(null);
+
+  // Simulate loading data from API
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 second loading time
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -174,6 +187,15 @@ const Settings = () => {
       }, 600);
     }
   };
+
+  // Show loader while fetching data
+  if (loading) {
+    return (
+      <div className="page-loader">
+        <Loader size="large" text="Loading your settings..." />
+      </div>
+    );
+  }
 
   return (
     <div className="settings-page">

@@ -295,3 +295,12 @@
         transform: translateX(-50%);
     }
 }
+.main-footer {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+}
+
+.footer-content {
+    flex-wrap: wrap;
+}

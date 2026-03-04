@@ -5,32 +5,45 @@ import SyllabusSection from '../components/dashboard/SyllabusSection';
 import SubjectsSection from '../components/dashboard/SubjectsSection';
 import StreaksSection from '../components/dashboard/StreaksSection';
 import MetricsSection from '../components/dashboard/MetricsSection';
+import Loader from '../components/common/Loader'; // Import Loader
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
+  const [loading, setLoading] = useState(true); // Add loading state
   const [activeExam, setActiveExam] = useState('jee');
   const [activeSection, setActiveSection] = useState('progress-tracker');
   const sectionRefs = useRef({});
 
   useEffect(() => {
-    // Section observer for animations
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
+    // Simulate API call to fetch dashboard data
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500); // 1.5 second loading time
+    
+    return () => clearTimeout(timer);
+  }, []);
 
-    document.querySelectorAll('.section').forEach(section => {
-      observer.observe(section);
-    });
+  useEffect(() => {
+    // Only run observer when not loading
+    if (!loading) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
 
-    return () => observer.disconnect();
-  }, [activeExam]);
+      document.querySelectorAll('.section').forEach(section => {
+        observer.observe(section);
+      });
+
+      return () => observer.disconnect();
+    }
+  }, [activeExam, loading]); // Add loading to dependency
 
   const handleExamChange = (exam) => {
     setActiveExam(exam);
@@ -50,6 +63,15 @@ const Dashboard = () => {
     { id: 'progress-tracker', icon: 'fa-tasks', label: 'Progress Tracker' },
     { id: 'streaks', icon: 'fa-fire', label: 'Study Streaks' },
   ];
+
+  // Show loader while fetching data
+  if (loading) {
+    return (
+      <div className="page-loader">
+        <Loader size="large" text="Loading your dashboard..." />
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-page">
