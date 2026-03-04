@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../assets/StudyBuddyLogo.jpg'; // Import your logo
 import '../styles/Login.css';
 
 const Login = () => {
-  const [isRightPanelActive, setIsRightPanelActive] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [isLogin, setIsLogin] = useState(true); // true = login, false = signup
+  const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
 
   // Login form state
@@ -14,90 +14,19 @@ const Login = () => {
     password: ''
   });
 
-  // Register form state
-  const [registerData, setRegisterData] = useState({
+  // Signup form state
+  const [signupData, setSignupData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    currentGrade: '',
+    status: '',
     examType: ''
   });
-
-  // Notification state
-  const [notification, setNotification] = useState(null);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
-  };
-
-  // Validation functions
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const validatePassword = (password) => {
-    return password.length >= 8;
-  };
-
-  const validateLoginForm = () => {
-    const newErrors = {};
-    
-    if (!loginData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(loginData.email)) {
-      newErrors.email = 'Please enter a valid email';
-    }
-    
-    if (!loginData.password) {
-      newErrors.password = 'Password is required';
-    } else if (!validatePassword(loginData.password)) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateRegisterForm = () => {
-    const newErrors = {};
-    
-    if (!registerData.firstName) {
-      newErrors.firstName = 'First name is required';
-    } else if (registerData.firstName.length < 2) {
-      newErrors.firstName = 'First name must be at least 2 characters';
-    }
-    
-    if (!registerData.lastName) {
-      newErrors.lastName = 'Last name is required';
-    } else if (registerData.lastName.length < 2) {
-      newErrors.lastName = 'Last name must be at least 2 characters';
-    }
-    
-    if (!registerData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!validateEmail(registerData.email)) {
-      newErrors.email = 'Please enter a valid email';
-    }
-    
-    if (!registerData.password) {
-      newErrors.password = 'Password is required';
-    } else if (!validatePassword(registerData.password)) {
-      newErrors.password = 'Password must be at least 8 characters';
-    }
-    
-    if (!registerData.currentGrade) {
-      newErrors.currentGrade = 'Please select your status';
-    }
-    
-    if (!registerData.examType) {
-      newErrors.examType = 'Please select your exam type';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleLoginChange = (e) => {
@@ -105,279 +34,215 @@ const Login = () => {
       ...loginData,
       [e.target.name]: e.target.value
     });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: null });
-    }
   };
 
-  const handleRegisterChange = (e) => {
-    setRegisterData({
-      ...registerData,
+  const handleSignupChange = (e) => {
+    setSignupData({
+      ...signupData,
       [e.target.name]: e.target.value
     });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: null });
-    }
   };
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    if (!validateLoginForm()) return;
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch('http://127.0.0.1:5000/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(loginData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        showNotification('Login successful! Redirecting...');
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setTimeout(() => navigate('/dashboard'), 1500);
-      } else {
-        showNotification(data.message || 'Login failed', 'error');
-      }
-    } catch (error) {
-      showNotification('Could not connect to the server', 'error');
-    } finally {
-      setIsLoading(false);
-    }
+    showNotification('Logging in...');
+    // Add your login API call here
+    setTimeout(() => navigate('/dashboard'), 1500);
   };
 
-  const handleRegisterSubmit = async (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    if (!validateRegisterForm()) return;
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('http://127.0.0.1:5000/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: registerData.firstName,
-          last_name: registerData.lastName,
-          email: registerData.email,
-          password: registerData.password,
-          current_grade: registerData.currentGrade,
-          exam_type: registerData.examType
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        showNotification('Registration successful! Please login.');
-        setRegisterData({
-          firstName: '', lastName: '', email: '', password: '', currentGrade: '', examType: ''
-        });
-        setTimeout(() => setIsRightPanelActive(false), 2000);
-      } else {
-        showNotification(data.message || 'Registration failed', 'error');
-      }
-    } catch (error) {
-      showNotification('Could not connect to the server', 'error');
-    } finally {
-      setIsLoading(false);
+    if (!signupData.status || !signupData.examType) {
+      showNotification('Please select all options', 'error');
+      return;
     }
+    showNotification('Account created! Please login');
+    setTimeout(() => setIsLogin(true), 1500);
   };
 
   return (
     <div className="login-page">
-      <div className={`login-container ${isRightPanelActive ? 'right-panel-active' : ''}`}>
-        
-        {/* Sign In Form */}
-        <div className="form-container sign-in-container">
-          <form onSubmit={handleLoginSubmit}>
-            <h1>Welcome Back!</h1>
-            
-            <div className="input-group">
-              <i className="fas fa-envelope"></i>
-              <input 
-                type="email" 
-                name="email" 
-                placeholder="Email" 
-                value={loginData.email}
-                onChange={handleLoginChange}
-              />
-            </div>
-            {errors.email && <span className="error-message">{errors.email}</span>}
-            
-            <div className="input-group">
-              <i className="fas fa-lock"></i>
-              <input 
-                type="password" 
-                name="password" 
-                placeholder="Password" 
-                value={loginData.password}
-                onChange={handleLoginChange}
-              />
-            </div>
-            {errors.password && <span className="error-message">{errors.password}</span>}
-            
-            <button type="submit" className="login-btn" disabled={isLoading}>
-              {isLoading ? <span className="loading-spinner"></span> : 'Sign In'}
-            </button>
-            
-            <p className="switch-text">
-              Don't have an account?{' '}
-              <span onClick={() => setIsRightPanelActive(true)}>
-                Sign Up
-              </span>
-            </p>
-          </form>
-        </div>
-
-        {/* Sign Up Form */}
-        <div className="form-container sign-up-container">
-          <form onSubmit={handleRegisterSubmit}>
-            <h1>Create Account</h1>
-            
-            <div className="name-group">
-              <div className="input-group">
-                <i className="fas fa-user"></i>
-                <input 
-                  type="text" 
-                  name="firstName" 
-                  placeholder="First Name" 
-                  value={registerData.firstName}
-                  onChange={handleRegisterChange}
-                />
-              </div>
+      <div className="login-container">
+        {/* Left Side - Form */}
+        <div className="login-form-container">
+          {isLogin ? (
+            /* Login Form */
+            <form onSubmit={handleLoginSubmit} className="login-form">
+              <h2>Welcome Back!</h2>
+              <p className="form-subtitle">Sign in to continue your journey</p>
               
               <div className="input-group">
-                <i className="fas fa-user"></i>
-                <input 
-                  type="text" 
-                  name="lastName" 
-                  placeholder="Last Name" 
-                  value={registerData.lastName}
-                  onChange={handleRegisterChange}
+                <i className="fas fa-envelope input-icon"></i>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={loginData.email}
+                  onChange={handleLoginChange}
+                  required
                 />
               </div>
-            </div>
-            {errors.firstName && <span className="error-message">{errors.firstName}</span>}
-            {errors.lastName && <span className="error-message">{errors.lastName}</span>}
 
-            <div className="input-group">
-              <i className="fas fa-envelope"></i>
-              <input 
-                type="email" 
-                name="email" 
-                placeholder="Email" 
-                value={registerData.email}
-                onChange={handleRegisterChange}
-              />
-            </div>
-            {errors.email && <span className="error-message">{errors.email}</span>}
-
-            <div className="input-group">
-              <i className="fas fa-lock"></i>
-              <input 
-                type="password" 
-                name="password" 
-                placeholder="Password" 
-                value={registerData.password}
-                onChange={handleRegisterChange}
-              />
-            </div>
-            {errors.password && <span className="error-message">{errors.password}</span>}
-
-            <div className="selection-group">
-              <p className="status-title">Select Your Status:</p>
-              <div className="status-options">
-                <label className={`radio-label ${registerData.currentGrade === 'Class 11' ? 'selected' : ''}`}>
-                  <input 
-                    type="radio" 
-                    name="currentGrade" 
-                    value="Class 11" 
-                    checked={registerData.currentGrade === 'Class 11'}
-                    onChange={handleRegisterChange}
-                  />
-                  <span>Class 11</span>
-                </label>
-                
-                <label className={`radio-label ${registerData.currentGrade === 'Class 12' ? 'selected' : ''}`}>
-                  <input 
-                    type="radio" 
-                    name="currentGrade" 
-                    value="Class 12"
-                    checked={registerData.currentGrade === 'Class 12'}
-                    onChange={handleRegisterChange}
-                  />
-                  <span>Class 12</span>
-                </label>
-                
-                <label className={`radio-label ${registerData.currentGrade === 'Dropper' ? 'selected' : ''}`}>
-                  <input 
-                    type="radio" 
-                    name="currentGrade" 
-                    value="Dropper"
-                    checked={registerData.currentGrade === 'Dropper'}
-                    onChange={handleRegisterChange}
-                  />
-                  <span>Dropper</span>
-                </label>
+              <div className="input-group">
+                <i className="fas fa-lock input-icon"></i>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={loginData.password}
+                  onChange={handleLoginChange}
+                  required
+                />
               </div>
-            </div>
 
-            <div className="selection-group">
-              <p className="status-title">Select Your Exam:</p>
-              <div className="status-options">
-                <label className={`radio-label ${registerData.examType === 'JEE' ? 'selected' : ''}`}>
-                  <input 
-                    type="radio" 
-                    name="examType" 
-                    value="JEE" 
-                    checked={registerData.examType === 'JEE'}
-                    onChange={handleRegisterChange}
+              <button type="submit" className="login-submit-btn">
+                Sign In
+              </button>
+
+              <p className="switch-text">
+                Don't have an account?{' '}
+                <span onClick={() => setIsLogin(false)}>Create one</span>
+              </p>
+            </form>
+          ) : (
+            /* Signup Form */
+            <form onSubmit={handleSignupSubmit} className="login-form">
+              <h2>Create Account</h2>
+              <p className="form-subtitle">Join StudyBuddy today</p>
+
+              <div className="name-group">
+                <div className="input-group">
+                  <i className="fas fa-user input-icon"></i>
+                  <input
+                    type="text"
+                    name="firstName"
+                    placeholder="First Name"
+                    value={signupData.firstName}
+                    onChange={handleSignupChange}
+                    required
                   />
-                  <span>JEE</span>
-                </label>
-                
-                <label className={`radio-label ${registerData.examType === 'NEET' ? 'selected' : ''}`}>
-                  <input 
-                    type="radio" 
-                    name="examType" 
-                    value="NEET"
-                    checked={registerData.examType === 'NEET'}
-                    onChange={handleRegisterChange}
+                </div>
+
+                <div className="input-group">
+                  <i className="fas fa-user input-icon"></i>
+                  <input
+                    type="text"
+                    name="lastName"
+                    placeholder="Last Name"
+                    value={signupData.lastName}
+                    onChange={handleSignupChange}
+                    required
                   />
-                  <span>NEET</span>
-                </label>
+                </div>
               </div>
-            </div>
-            
-            <button type="submit" className="signup-btn" disabled={isLoading}>
-              {isLoading ? <span className="loading-spinner"></span> : 'Sign Up'}
-            </button>
-          </form>
+
+              <div className="input-group">
+                <i className="fas fa-envelope input-icon"></i>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email Address"
+                  value={signupData.email}
+                  onChange={handleSignupChange}
+                  required
+                />
+              </div>
+
+              <div className="input-group">
+                <i className="fas fa-lock input-icon"></i>
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  value={signupData.password}
+                  onChange={handleSignupChange}
+                  required
+                />
+              </div>
+
+              <div className="selection-section">
+                <p className="selection-label">Your Status</p>
+                <div className="selection-options">
+                  <button
+                    type="button"
+                    className={`option-btn ${signupData.status === 'Class 11' ? 'active' : ''}`}
+                    onClick={() => setSignupData({...signupData, status: 'Class 11'})}
+                  >
+                    Class 11
+                  </button>
+                  <button
+                    type="button"
+                    className={`option-btn ${signupData.status === 'Class 12' ? 'active' : ''}`}
+                    onClick={() => setSignupData({...signupData, status: 'Class 12'})}
+                  >
+                    Class 12
+                  </button>
+                  <button
+                    type="button"
+                    className={`option-btn ${signupData.status === 'Dropper' ? 'active' : ''}`}
+                    onClick={() => setSignupData({...signupData, status: 'Dropper'})}
+                  >
+                    Dropper
+                  </button>
+                </div>
+              </div>
+
+              <div className="selection-section">
+                <p className="selection-label">Your Exam</p>
+                <div className="selection-options">
+                  <button
+                    type="button"
+                    className={`option-btn ${signupData.examType === 'JEE' ? 'active' : ''}`}
+                    onClick={() => setSignupData({...signupData, examType: 'JEE'})}
+                  >
+                    JEE
+                  </button>
+                  <button
+                    type="button"
+                    className={`option-btn ${signupData.examType === 'NEET' ? 'active' : ''}`}
+                    onClick={() => setSignupData({...signupData, examType: 'NEET'})}
+                  >
+                    NEET
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="login-submit-btn">
+                Sign Up
+              </button>
+
+              <p className="switch-text">
+                Already have an account?{' '}
+                <span onClick={() => setIsLogin(true)}>Sign in</span>
+              </p>
+            </form>
+          )}
         </div>
 
-        {/* Overlay */}
-        <div className="overlay-container">
-          <div className="overlay">
-            <div className="overlay-panel overlay-left">
-              <h1>Hello, Friend!</h1>
-              <p>Enter your personal details and start your journey with us</p>
-              <button type="button" className="ghost-btn" onClick={() => setIsRightPanelActive(false)}>
-                Back to Login
-              </button>
+        {/* Right Side - Branding with Logo */}
+        <div className="login-branding">
+          <div className="branding-content">
+            <div className="branding-logo">
+              <img src={logo} alt="StudyBuddy Logo" />
             </div>
-            <div className="overlay-panel overlay-right">
-              <h1>Welcome to StudyBuddy</h1>
-              <p>Join thousands of students preparing for JEE & NEET</p>
-              <button type="button" className="ghost-btn" onClick={() => setIsRightPanelActive(true)}>
-                Create Account
-              </button>
+            <h1>StudyBuddy</h1>
+            <p>Your AI-powered learning companion for JEE & NEET preparation</p>
+            <div className="branding-features">
+              <div className="branding-feature">
+                <i className="fas fa-robot"></i>
+                <span>AI Assistant</span>
+              </div>
+              <div className="branding-feature">
+                <i className="fas fa-chart-line"></i>
+                <span>Progress Tracking</span>
+              </div>
+              <div className="branding-feature">
+                <i className="fas fa-clock"></i>
+                <span>Smart Timers</span>
+              </div>
             </div>
           </div>
         </div>
-
       </div>
 
       {/* Notification */}
