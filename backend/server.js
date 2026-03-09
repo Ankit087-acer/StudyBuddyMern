@@ -25,7 +25,8 @@ mongoose.connect(process.env.MONGODB_URI)
 // ============================================
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/dashboard', require('./routes/dashboardRoutes')); // ✅ ADD THIS LINE for Day 5
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/study', require('./routes/studyRoutes')); // ✅ ADD THIS LINE for Day 6
 
 // Home route
 app.get('/', (req, res) => {
@@ -35,7 +36,8 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
-      dashboard: '/api/dashboard', // Added this
+      dashboard: '/api/dashboard',
+      study: '/api/study', // Added this
       register: 'POST /api/auth/register',
       login: 'POST /api/auth/login',
       profile: 'GET /api/auth/profile'
@@ -72,4 +74,9 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`📍 http://localhost:${PORT}`);
+  console.log(`📌 Available endpoints:`);
+  console.log(`   - Auth: /api/auth`);
+  console.log(`   - Users: /api/users`);
+  console.log(`   - Dashboard: /api/dashboard`);
+  console.log(`   - Study: /api/study`); // Added this
 });
