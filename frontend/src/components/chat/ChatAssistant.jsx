@@ -1,236 +1,308 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { sendChatMessage } from '../../services/api';
+import { useChat } from '../../hooks/useChat';
 import { useNotifications } from '../../hooks/useNotifications';
 import '../../styles/ChatAssistant.css';
 
 const ChatAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [showSessions, setShowSessions] = useState(false);
   const messagesEndRef = useRef(null);
   const { showNotification } = useNotifications();
+  
+  const {
+    sessions,
+    currentSession,
+    messages,
+    sending,
+    error,
+    contextData,
+    createNewSession,
+    loadSession,
+    sendMessage,
+    deleteSession,
+    clearAllChats
+  } = useChat();
 
+  // Scroll to bottom when messages change
   useEffect(() => {
-    // Add welcome message
-    if (messages.length === 0) {
-      setMessages([
-        {
-          id: 'welcome',
-          content: (
-            <>
-              <p>Hello! I'm your AI study assistant. I can help you with:</p>
-              <ul>
-                <li>📚 Explaining difficult concepts</li>
-                <li>🎯 Solving practice problems</li>
-                <li>📊 Study plan suggestions</li>
-                <li>⏰ Time management tips</li>
-              </ul>
-              <p>What would you like to know today?</p>
-            </>
-          ),
-          sender: 'ai',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-      ]);
-    }
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const toggleChat = () => {
+    console.log('Toggling chat:', !isOpen);
     setIsOpen(!isOpen);
+    if (!isOpen) {
+      setShowSessions(false);
+    }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
-
-    const userMessage = {
-      id: Date.now(),
-      content: inputValue,
-      sender: 'user',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!inputValue.trim() || sending) return;
+    
+    const message = inputValue;
     setInputValue('');
-    setIsTyping(true);
-
-    try {
-      const response = await sendChatMessage(inputValue);
-      
-      const aiMessage = {
-        id: Date.now() + 1,
-        content: response,
-        sender: 'ai',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      showNotification('Failed to get response from AI assistant', 'error');
-      
-      const errorMessage = {
-        id: Date.now() + 1,
-        content: "I'm having trouble connecting. Please try again later.",
-        sender: 'ai',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-    }
+    await sendMessage(message);
   };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      handleSendMessage(e);
     }
+  };
+
+  const handleNewChat = async () => {
+    await createNewSession();
+    setShowSessions(false);
   };
 
   const handleQuickQuestion = async (question) => {
-    const userMessage = {
-      id: Date.now(),
-      content: question,
-      sender: 'user',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setIsTyping(true);
-
-    try {
-      const response = await sendChatMessage(question);
-      
-      const aiMessage = {
-        id: Date.now() + 1,
-        content: response,
-        sender: 'ai',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      showNotification('Failed to get response from AI assistant', 'error');
-    } finally {
-      setIsTyping(false);
-    }
+    setInputValue(question);
+    setTimeout(() => handleSendMessage({ preventDefault: () => {} }), 100);
   };
 
-  const quickQuestions = [
-    { text: 'Explain quantum physics basics', label: '🤔 Explain a concept' },
-    { text: 'Solve this integration problem', label: '🧮 Solve a problem' },
-    { text: 'Suggest study schedule for JEE', label: '📅 Study plan help' }
-  ];
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  const getSuggestionQuestions = () => {
+    const weakTopics = contextData?.weakTopics || [];
+    
+    const suggestions = [
+      'How can I improve my study efficiency?',
+      'What are the best revision techniques?',
+      'Create a study plan for me',
+      'How to stay motivated while studying?'
+    ];
+
+    if (weakTopics.length > 0) {
+      suggestions.unshift(`How can I improve in ${weakTopics[0].topic}?`);
+    }
+
+    return suggestions.slice(0, 4);
+  };
 
   return (
     <div className="ai-assistant">
+      {/* Chat Toggle Button */}
       <button 
-        className="chat-toggle-btn btn-animated" 
+        className={`chat-toggle-btn btn-animated ${isOpen ? 'active' : ''}`}
         onClick={toggleChat}
         aria-label="Open chat assistant"
       >
         <i className="fas fa-robot"></i>
         <span className="btn-text">Study Assistant</span>
-        <span className="notification-dot"></span>
+        {!isOpen && messages.length > 1 && <span className="notification-dot"></span>}
       </button>
 
-      <div className={`chat-window ${isOpen ? 'active' : ''}`}>
+      {/* Chat Window - FIXED: Added active class based on isOpen */}
+      <div className={`chat-window ${isOpen ? 'active' : ''} ${showSessions ? 'sessions-open' : ''}`}>
         <div className="chat-header">
           <div className="chat-title">
             <i className="fas fa-robot"></i>
             <div className="chat-info">
               <h4 className="chat-name">StudyBuddy AI</h4>
-              <span className="status">Online • Ready to help</span>
+              <span className="status">
+                {sending ? 'Typing...' : 'Online • Ready to help'}
+              </span>
             </div>
           </div>
-          <button className="close-chat" onClick={toggleChat} aria-label="Close chat">
-            <i className="fas fa-times"></i>
-          </button>
+          <div className="chat-header-actions">
+            <button 
+              className={`icon-btn ${showSessions ? 'active' : ''}`}
+              onClick={() => setShowSessions(!showSessions)}
+              title="Chat history"
+            >
+              <i className="fas fa-history"></i>
+            </button>
+            <button 
+              className="close-chat" 
+              onClick={toggleChat}
+              aria-label="Close chat"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
         </div>
 
-        <div className="chat-messages">
-          {messages.map(message => (
-            <div key={message.id} className={`message ${message.sender}-message`}>
-              <div className="message-avatar">
-                <i className={`fas ${message.sender === 'user' ? 'fa-user' : 'fa-robot'}`}></i>
+        {/* Split View: Sessions Sidebar + Messages */}
+        <div className="chat-split-view">
+          {/* Sessions Sidebar */}
+          {showSessions && (
+            <div className="chat-sessions-sidebar">
+              <div className="sessions-header">
+                <h4>Chat History</h4>
+                <button className="btn-icon" onClick={handleNewChat} title="New chat">
+                  <i className="fas fa-plus"></i>
+                </button>
               </div>
-              <div className="message-content">
-                {typeof message.content === 'string' ? (
-                  <p dangerouslySetInnerHTML={{ 
-                    __html: message.content
-                      .replace(/\n/g, '<br>')
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                  }} />
+              <div className="sessions-list">
+                {sessions.length === 0 ? (
+                  <div className="no-sessions">
+                    <i className="fas fa-comment-slash"></i>
+                    <p>No chats yet</p>
+                  </div>
                 ) : (
-                  message.content
+                  sessions.map(session => (
+                    <div
+                      key={session._id}
+                      className={`session-item ${currentSession?._id === session._id ? 'active' : ''}`}
+                      onClick={() => {
+                        loadSession(session._id);
+                        setShowSessions(false);
+                      }}
+                    >
+                      <i className="fas fa-comment"></i>
+                      <div className="session-info">
+                        <div className="session-title">{session.title}</div>
+                        <div className="session-date">
+                          {new Date(session.updatedAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <button 
+                        className="delete-session"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteSession(session._id);
+                        }}
+                        title="Delete chat"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  ))
                 )}
-                <span className="message-time">{message.time}</span>
               </div>
-            </div>
-          ))}
-          
-          {isTyping && (
-            <div className="message ai-message typing-indicator">
-              <div className="message-avatar">
-                <i className="fas fa-robot"></i>
-              </div>
-              <div className="message-content">
-                <div className="typing-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
+              {sessions.length > 0 && (
+                <button className="clear-all-btn" onClick={clearAllChats}>
+                  <i className="fas fa-trash-alt"></i> Clear All
+                </button>
+              )}
             </div>
           )}
-          
-          <div ref={messagesEndRef} />
-        </div>
 
-        <div className="quick-actions">
-          {quickQuestions.map((q, index) => (
-            <button 
-              key={index}
-              className="quick-btn btn-animated" 
-              onClick={() => handleQuickQuestion(q.text)}
-            >
-              {q.label}
-            </button>
-          ))}
-        </div>
+          {/* Messages Area */}
+          <div className="chat-main-area">
+            <div className="chat-messages">
+              {messages.length === 0 ? (
+                <div className="welcome-message">
+                  <i className="fas fa-robot"></i>
+                  <h3>Hi! I'm your AI study assistant</h3>
+                  <p>I can help you with:</p>
+                  <ul>
+                    <li>📚 Explaining difficult concepts</li>
+                    <li>🎯 Solving practice problems</li>
+                    <li>📊 Study plan suggestions</li>
+                    <li>⏰ Time management tips</li>
+                  </ul>
+                  {contextData?.weakTopics?.length > 0 && (
+                    <div className="context-hint">
+                      <p>Based on your recent practice, you might want help with:</p>
+                      <div className="weak-topics">
+                        {contextData.weakTopics.map((t, i) => (
+                          <span key={i} className="topic-tag">{t.topic}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                messages.map((msg, index) => (
+                  <div key={index} className={`message ${msg.role}-message`}>
+                    <div className="message-avatar">
+                      <i className={`fas fa-${msg.role === 'user' ? 'user' : 'robot'}`}></i>
+                    </div>
+                    <div className="message-content">
+                      {typeof msg.content === 'string' ? (
+                        <p dangerouslySetInnerHTML={{ 
+                          __html: msg.content
+                            .replace(/\n/g, '<br>')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        }} />
+                      ) : (
+                        msg.content
+                      )}
+                      <span className="message-time">{formatTime(msg.timestamp)}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+              
+              {sending && (
+                <div className="message ai-message">
+                  <div className="message-avatar">
+                    <i className="fas fa-robot"></i>
+                  </div>
+                  <div className="message-content">
+                    <div className="typing-indicator">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {error && (
+                <div className="error-message">
+                  <i className="fas fa-exclamation-circle"></i>
+                  <span>{error}</span>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
 
-        <div className="chat-input-container">
-          <div className="chat-input">
-            <input 
-              type="text" 
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about JEE/NEET preparation..." 
-              maxLength="500"
-              aria-label="Type your message"
-            />
-            <button 
-              className="send-btn btn-animated" 
-              onClick={handleSendMessage}
-              aria-label="Send message"
-              disabled={!inputValue.trim()}
-            >
-              <i className="fas fa-paper-plane"></i>
-            </button>
-          </div>
-          <div className="input-hint">
-            <span>Press Enter to send</span>
+            {/* Quick Questions */}
+            {messages.length === 0 && (
+              <div className="quick-questions">
+                {getSuggestionQuestions().map((q, i) => (
+                  <button
+                    key={i}
+                    className="quick-question-btn"
+                    onClick={() => handleQuickQuestion(q)}
+                    disabled={sending}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Input Area */}
+            <form className="chat-input-container" onSubmit={handleSendMessage}>
+              <div className="chat-input">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask me anything about your studies..."
+                  disabled={sending}
+                  maxLength="500"
+                />
+                <button 
+                  type="submit" 
+                  className="send-btn"
+                  disabled={!inputValue.trim() || sending}
+                >
+                  {sending ? (
+                    <i className="fas fa-spinner fa-spin"></i>
+                  ) : (
+                    <i className="fas fa-paper-plane"></i>
+                  )}
+                </button>
+              </div>
+              <div className="input-hint">
+                <span>Press Enter to send</span>
+              </div>
+            </form>
           </div>
         </div>
       </div>

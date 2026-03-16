@@ -288,7 +288,7 @@ export const goalsAPI = {
     })
 };
 
-// ===== CHAT SERVICES =====
+// ===== SIMPLE CHAT SERVICE (Original) =====
 export const sendChatMessage = async (prompt) => {
   try {
     const token = localStorage.getItem('token');
@@ -314,6 +314,43 @@ export const sendChatMessage = async (prompt) => {
   }
 };
 
+// ===== FULL CHAT API (With session support) =====
+export const chatAPI = {
+  // Send a message and get AI response
+  sendMessage: async (message, sessionId = null) => {
+    const body = sessionId ? { message, sessionId } : { message };
+    return fetchAPI('/chat/message', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+  },
+
+  // Get all chat sessions
+  getHistory: () => fetchAPI('/chat/history'),
+
+  // Get a specific chat session
+  getSession: (sessionId) => fetchAPI(`/chat/session/${sessionId}`),
+
+  // Create a new chat session
+  createSession: (title = 'New Chat') => 
+    fetchAPI('/chat/session', {
+      method: 'POST',
+      body: JSON.stringify({ title })
+    }),
+
+  // Delete a chat session
+  deleteSession: (sessionId) => 
+    fetchAPI(`/chat/session/${sessionId}`, {
+      method: 'DELETE'
+    }),
+
+  // Clear all chat history
+  clearAll: () => 
+    fetchAPI('/chat/clear', {
+      method: 'DELETE'
+    })
+};
+
 // ===== HEALTH CHECK (Optional) =====
 export const healthAPI = {
   check: () => fetchAPI('/health').catch(() => ({ status: 'offline' }))
@@ -327,7 +364,8 @@ const api = {
   practice: practiceAPI,
   plan: planAPI,
   goals: goalsAPI,
-  chat: sendChatMessage,
+  chat: chatAPI,
+  sendChatMessage,  // Keep for backward compatibility
   health: healthAPI
 };
 
