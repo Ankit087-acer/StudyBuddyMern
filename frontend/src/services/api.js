@@ -1,4 +1,9 @@
-const API_BASE_URL = 'http://127.0.0.1:5000/api';
+// ============================================
+// API CONFIGURATION - Vercel Frontend + Render Backend
+// ============================================
+
+// Use Vite environment variable (Vercel supports Vite)
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api';
 
 // Helper function for fetch requests with token
 const fetchAPI = async (endpoint, options = {}) => {

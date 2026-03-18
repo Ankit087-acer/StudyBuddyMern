@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotifications } from '../../hooks/useNotifications';
 import { sendNotificationEmail } from '../../services/emailService';
-import logo from '../../assets/StudyBuddyLogo.jpg';
+import logo from '../../assets/StudyBuddylogo.jpg';
 import '../../styles/Header.css';
 
 const Header = () => {
