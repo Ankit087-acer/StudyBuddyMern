@@ -1,4 +1,170 @@
 /* Header Styles */
+/* ===== HEADER HEIGHT FIX - ADD THIS AT THE VERY TOP ===== */
+.main-header {
+    height: 70px !important;
+    min-height: 70px !important;
+    max-height: 70px !important;
+    padding: 0 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow: hidden !important;
+}
+
+.main-header .container {
+    height: 100% !important;
+    width: 100% !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 0 20px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.navbar {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+}
+
+.nav-brand {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.logo {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.logo img {
+    height: 40px !important;
+    width: auto !important;
+    border-radius: 50% !important;
+}
+
+.brand-name {
+    font-size: 1.5rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+}
+
+.nav-menu {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 20px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.nav-item {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.nav-link {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 10px !important;
+    white-space: nowrap !important;
+}
+
+.nav-controls {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+}
+
+.notification-btn,
+.theme-toggle {
+    height: 40px !important;
+    width: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+.auth-buttons {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.auth-buttons .btn {
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 20px !important;
+    white-space: nowrap !important;
+}
+
+/* Mobile responsive height fix */
+@media (max-width: 768px) {
+    .main-header {
+        height: auto !important;
+        min-height: 60px !important;
+        padding: 10px 0 !important;
+    }
+    
+    .navbar {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+    
+    .nav-menu {
+        height: auto !important;
+        width: 100% !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        padding: 10px 0 !important;
+    }
+    
+    .nav-item {
+        height: auto !important;
+    }
+    
+    .nav-link {
+        height: auto !important;
+        padding: 8px 15px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-header {
+        padding: 8px 0 !important;
+    }
+    
+    .logo img {
+        height: 35px !important;
+    }
+    
+    .brand-name {
+        font-size: 1.2rem !important;
+    }
+    
+    .notification-btn,
+    .theme-toggle {
+        height: 35px !important;
+        width: 35px !important;
+    }
+    
+    .auth-buttons .btn {
+        height: 35px !important;
+        padding: 0 12px !important;
+        font-size: 0.8rem !important;
+    }
+}
+
 .main-header {
     background: var(--gradient);
     color: white;
