@@ -14,8 +14,8 @@ A full-stack MERN application to help students manage their studies with AI-powe
 
 StudyBuddy is a comprehensive study management platform designed for JEE and NEET aspirants. It combines traditional study tools with AI-powered assistance to create a personalized learning experience.
 
-**Live Demo:** [https://studybuddy.vercel.app](https://study-buddy-mern.vercel.app/)  
-**GitHub Repo:** [https://github.com/yourusername/studybuddy](https://github.com/ankitparida-dev/StudyBuddyMern)
+**Live Demo:** [https://study-buddy-mern.vercel.app/](https://study-buddy-mern.vercel.app/)  
+**GitHub Repo:** [https://github.com/ankitparida-dev/StudyBuddyMern](https://github.com/ankitparida-dev/StudyBuddyMern)
 
 ---
 
