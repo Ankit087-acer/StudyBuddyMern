@@ -44,76 +44,76 @@
     --shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
-/* ===== NORMAL LAYOUT - FOOTER SCROLLS WITH CONTENT ===== */
-html, body, #root {
-    height: 100%;
-    width: 100%;
+/* ===== LAYOUT - Remove Actual White Space Only ===== */
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
 }
 
 body {
-    overflow-y: auto;
-    overflow-x: hidden;
     background-color: var(--sky-light);
     color: var(--dark);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
-    min-height: 101vh;
+    overflow-y: auto;
 }
 
 #root {
-    display: block;
     min-height: 100vh;
+    width: 100%;
 }
 
 .app {
-    display: block;
-    min-height: 100vh;
     width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Header - sticky at top */
+/* Header - original styles preserved */
 .main-header {
+    width: 100%;
+    background: var(--gradient);
+    color: white;
+    padding: 15px 0;
+    box-shadow: var(--shadow);
     position: sticky;
     top: 0;
     z-index: 100;
-    width: 100%;
 }
 
-/* Main Content - normal flow */
+/* Main Content - original styles */
 .main-content {
     width: 100%;
-    min-height: calc(100vh - 140px);
+    flex: 1;
 }
 
-/* Content wrapper */
+/* Content wrapper - preserve original spacing */
 .content-wrapper {
     width: 100%;
     padding: 20px;
     box-sizing: border-box;
-    min-height: calc(100vh - 200px);
 }
 
-/* Footer - normal flow (scrolls with content) */
+/* Footer - original styles */
 .main-footer {
     width: 100%;
     background: #1e293b;
     color: #f8fafc;
-    clear: both;
+    padding: 60px 0 30px;
+    margin-top: auto;
 }
 
-/* Page containers */
-.dashboard-page,
-.features-page,
-.studytools-page,
-.settings-page,
-.home-page {
-    width: 100%;
-    min-height: 100%;
-}
-
-/* Container */
+/* Container - preserve original centering */
 .container {
     width: 100%;
     max-width: 1200px;
@@ -122,11 +122,20 @@ body {
     box-sizing: border-box;
 }
 
+/* Page containers - full width */
+.dashboard-page,
+.features-page,
+.studytools-page,
+.settings-page,
+.home-page {
+    width: 100%;
+}
+
 /* Login page special */
 .main-content.login-page-content {
-    overflow: hidden !important;
+    overflow: hidden;
     padding: 0;
-    background: transparent !important;
+    background: transparent;
 }
 
 .main-content.login-page-content .content-wrapper {
@@ -135,10 +144,20 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent !important;
+    background: transparent;
 }
 
-/* Custom scrollbar */
+/* Login page background */
+.login-page {
+    background: linear-gradient(135deg, #dbeafe, #eff6ff);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Custom scrollbar - visible and styled */
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -158,136 +177,176 @@ body {
     background: var(--primary-dark);
 }
 
-/* Firefox scrollbar */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary) #e2e8f0;
-}
-
-/* ===== LOGIN PAGE BACKGROUND FIX ===== */
-/* Ensure login page has correct gradient */
-.login-page {
-    background: linear-gradient(135deg, #dbeafe, #eff6ff) !important;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
-}
-
-/* ===== LOGIN PAGE FULL BACKGROUND FIX ===== */
-/* Remove white space around login page */
-body:has(.login-page) {
-    background: linear-gradient(135deg, #dbeafe, #eff6ff) !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-.login-page {
-    background: linear-gradient(135deg, #dbeafe, #eff6ff) !important;
-    min-height: 100vh;
-    width: 100%;
-    margin: 0 !important;
-    padding: 20px !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow-y: auto;
-}
-
-/* Override any parent backgrounds */
-html:has(.login-page) {
-    background: linear-gradient(135deg, #dbeafe, #eff6ff) !important;
-}
-
-/* Remove any margins from containers */
-.login-page .container {
-    padding: 0 !important;
-    margin: 0 auto !important;
-}
-
-/* Ensure main content doesn't add extra space */
-.main-content.login-page-content {
-    padding: 0 !important;
-    margin: 0 !important;
-    background: transparent !important;
-}
-
-/* ===== FORCE SCROLLBAR TO ALWAYS SHOW ===== */
-/* Force scrollbar to always be visible */
+/* Force scrollbar visibility */
 html {
-    overflow-y: scroll !important;
-}
-
-/* Ensure body has enough height to trigger scroll */
-body {
-    min-height: 101vh !important;
-}
-
-/* Add minimum height to main content */
-.main-content {
-    min-height: calc(100vh - 80px) !important;
-}
-
-/* Add a small invisible spacer to force scroll */
-.dashboard-page::after,
-.features-page::after,
-.studytools-page::after,
-.settings-page::after,
-.home-page::after {
-    content: '';
-    display: block;
-    height: 10px;
-    width: 100%;
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Ensure footer doesn't cause overflow issues */
-.main-footer {
-    position: relative;
-    clear: both;
-}
-
-/* ===== VISIBLE SCROLLBAR - NOT HIDDEN ===== */
-/* Make scrollbar always visible and thicker */
-html {
-    overflow-y: scroll !important;
+    overflow-y: scroll;
 }
 
 body {
-    overflow-y: scroll !important;
+    min-height: 101vh;
 }
 
-/* Custom scrollbar for all browsers */
-::-webkit-scrollbar {
-    width: 12px !important;
-    height: 12px !important;
+/* ===== INTENDED SPACING - KEEP FOR DESIGN ===== */
+/* These are the margins that create proper spacing between elements */
+/* DO NOT REMOVE - they are part of the design */
+
+/* Hero section spacing */
+.hero-title {
+    margin-bottom: 20px;
 }
 
-::-webkit-scrollbar-track {
-    background: #e2e8f0 !important;
-    border-radius: 8px !important;
-    margin: 4px 0 !important;
+.typing-container {
+    margin-bottom: 20px;
 }
 
-::-webkit-scrollbar-thumb {
-    background: #2563eb !important;
-    border-radius: 8px !important;
-    border: 2px solid #e2e8f0 !important;
+.hero-description {
+    margin-bottom: 30px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: #1d4ed8 !important;
+.exam-selection {
+    margin-top: 20px;
 }
 
-/* Firefox scrollbar */
-* {
-    scrollbar-width: auto !important;
-    scrollbar-color: #2563eb #e2e8f0 !important;
+/* Section spacing */
+.section-header {
+    margin-bottom: 24px;
 }
 
-/* Ensure scrollbar area is visible */
-body {
-    scrollbar-gutter: stable !important;
+.section-title {
+    margin-bottom: 15px;
+}
+
+.section-subtitle {
+    margin-bottom: 50px;
+}
+
+/* Diary section spacing */
+.diary-feature {
+    margin-bottom: 30px;
+}
+
+.diary-feature h3 {
+    margin-bottom: 15px;
+}
+
+.streak-container {
+    margin-top: 10px;
+}
+
+.progress-graph {
+    margin-top: 15px;
+}
+
+.entry-header {
+    margin-bottom: 15px;
+}
+
+.entry-actions {
+    margin-top: 15px;
+}
+
+/* Features section spacing */
+.feature-icon-wrapper {
+    margin-bottom: 25px;
+}
+
+.feature-title {
+    margin-bottom: 15px;
+}
+
+.feature-description {
+    margin-bottom: 20px;
+}
+
+/* Button spacing */
+.btn {
+    margin-top: 10px;
+}
+
+/* Chat spacing */
+.welcome-message i {
+    margin-bottom: 20px;
+}
+
+.welcome-message h3 {
+    margin-bottom: 10px;
+}
+
+.welcome-message ul {
+    margin: 20px auto;
+}
+
+.welcome-message li {
+    margin: 10px 0;
+}
+
+.input-hint {
+    margin-top: 8px;
+}
+
+/* Footer spacing */
+.footer-content {
+    margin-bottom: 40px;
+}
+
+.footer-title {
+    margin-bottom: 20px;
+}
+
+.footer-description {
+    margin-bottom: 20px;
+}
+
+.social-links {
+    margin-top: 20px;
+}
+
+.footer-bottom {
+    margin-top: 20px;
+    padding-top: 30px;
+}
+
+/* Reduce spacing for mobile */
+@media (max-width: 768px) {
+    .hero-title {
+        margin-bottom: 15px;
+    }
+    
+    .hero-description {
+        margin-bottom: 20px;
+    }
+    
+    .section-subtitle {
+        margin-bottom: 30px;
+    }
+    
+    .footer-content {
+        margin-bottom: 30px;
+    }
+    
+    .welcome-message {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        margin-bottom: 10px;
+    }
+    
+    .hero-description {
+        margin-bottom: 15px;
+    }
+    
+    .section-subtitle {
+        margin-bottom: 20px;
+    }
+    
+    .diary-feature {
+        margin-bottom: 20px;
+    }
+    
+    .footer-content {
+        margin-bottom: 25px;
+    }
 }
